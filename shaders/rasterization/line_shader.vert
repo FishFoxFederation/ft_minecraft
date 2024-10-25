@@ -14,8 +14,6 @@ layout(push_constant) uniform PushConstants
 
 layout(location = 0) in vec3 positions;
 
-layout(location = 0) out vec3 fragColors;
-
 void main()
 {
     gl_Position = cm.proj * cm.view * pc.model * vec4(positions, 1.0);
