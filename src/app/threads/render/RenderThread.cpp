@@ -967,17 +967,6 @@ void RenderThread::lightingPass()
 
 		vkCmdBindPipeline(vk.draw_command_buffers[vk.current_frame], VK_PIPELINE_BIND_POINT_GRAPHICS, vk.item_icon_pipeline.pipeline);
 
-		const std::array<ItemInfo::Type, 9> toolbar_items = {
-			ItemInfo::Type::GrassBlock,
-			ItemInfo::Type::DirtBlock,
-			ItemInfo::Type::StoneBlock,
-			ItemInfo::Type::WaterBlock,
-			ItemInfo::Type::GlassBlock,
-			ItemInfo::Type::LightBlock,
-			ItemInfo::Type::None,
-			ItemInfo::Type::None,
-			ItemInfo::Type::None
-		};
 		{ // Toolbar items
 			const std::vector<VkDescriptorSet> toolbar_item_descriptor_sets = {
 				vk.item_icon_descriptor.set
