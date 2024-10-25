@@ -23,4 +23,4 @@ mkdir -p build
 # build the project
 cd build
 cmake .. -D CMAKE_CXX_COMPILER=g++-11 &&
-make -j 8
+make -j

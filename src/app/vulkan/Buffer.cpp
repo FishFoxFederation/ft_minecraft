@@ -1,12 +1,24 @@
 #include "Buffer.hpp"
 #include "vk_helper.hpp"
+#include "logger.hpp"
+
+Buffer::Buffer():
+	buffer(VK_NULL_HANDLE),
+	memory(VK_NULL_HANDLE),
+	m_device(VK_NULL_HANDLE),
+	m_size(0),
+	m_mapped_memory(nullptr)
+{
+}
 
 Buffer::Buffer(
 	VkDevice device,
 	VkPhysicalDevice physical_device,
 	const CreateInfo & create_info
 ):
-	m_device(device)
+	m_device(device),
+	m_size(create_info.size),
+	m_mapped_memory(nullptr)
 {
 	VkBufferCreateInfo buffer_info = {};
 	buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -43,6 +55,14 @@ Buffer::Buffer(
 	);
 
 	vkBindBufferMemory(device, buffer, memory, 0);
+
+	if (create_info.memory_properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+	{
+		VK_CHECK(
+			vkMapMemory(device, memory, 0, VK_WHOLE_SIZE, 0, &m_mapped_memory),
+			"Failed to map buffer memory"
+		);
+	}
 }
 
 Buffer::~Buffer()
@@ -53,11 +73,15 @@ Buffer::~Buffer()
 Buffer::Buffer(Buffer && other) noexcept:
 	buffer(other.buffer),
 	memory(other.memory),
-	m_device(other.m_device)
+	m_device(other.m_device),
+	m_size(other.m_size),
+	m_mapped_memory(other.m_mapped_memory)
 {
 	other.buffer = VK_NULL_HANDLE;
 	other.memory = VK_NULL_HANDLE;
 	other.m_device = VK_NULL_HANDLE;
+	other.m_size = 0;
+	other.m_mapped_memory = nullptr;
 }
 
 Buffer & Buffer::operator=(Buffer && other) noexcept
@@ -69,10 +93,14 @@ Buffer & Buffer::operator=(Buffer && other) noexcept
 		buffer = other.buffer;
 		memory = other.memory;
 		m_device = other.m_device;
+		m_size = other.m_size;
+		m_mapped_memory = other.m_mapped_memory;
 
 		other.buffer = VK_NULL_HANDLE;
 		other.memory = VK_NULL_HANDLE;
 		other.m_device = VK_NULL_HANDLE;
+		other.m_size = 0;
+		other.m_mapped_memory = nullptr;
 	}
 
 	return *this;
@@ -94,4 +122,9 @@ void Buffer::clear()
 			memory = VK_NULL_HANDLE;
 		}
 	}
+}
+
+void * Buffer::mappedMemory()
+{
+	return m_mapped_memory;
 }

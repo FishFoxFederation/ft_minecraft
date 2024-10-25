@@ -136,12 +136,7 @@ Image::Image(
 
 		Buffer staging_buffer = Buffer(device, physical_device, staging_buffer_create_info);
 
-		void * data;
-		VK_CHECK(
-			vkMapMemory(device, staging_buffer.memory, 0, image_size, 0, &data),
-			"Failed to map memory for staging image."
-		);
-		memcpy(data, pixel, static_cast<size_t>(image_size));
+		memcpy(staging_buffer.mappedMemory(), pixel, static_cast<size_t>(image_size));
 		vkUnmapMemory(device, staging_buffer.memory);
 
 

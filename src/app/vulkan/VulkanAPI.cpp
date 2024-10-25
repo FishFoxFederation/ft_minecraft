@@ -156,6 +156,8 @@ VulkanAPI::~VulkanAPI()
 		debug_info_image.clear();
 		item_icon_images.clear();
 
+		debug_info_buffers.clear();
+
 		camera_descriptor.clear();
 		block_textures_descriptor.clear();
 		cube_map_descriptor.clear();
@@ -1052,6 +1054,18 @@ void VulkanAPI::createTextureImage()
 		SingleTimeCommand command_buffer(device, command_pool, graphics_queue);
 
 		debug_info_image = Image(device, physical_device, command_buffer, image_info);
+
+		// create debug info buffer
+		debug_info_buffers.resize(max_frames_in_flight);
+		for (int i = 0; i < max_frames_in_flight; i++)
+		{
+			Buffer::CreateInfo buffer_info = {};
+			buffer_info.size = debug_info_image.extent2D.width * debug_info_image.extent2D.height * 4;
+			buffer_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+			buffer_info.memory_properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+			debug_info_buffers[i] = Buffer(device, physical_device, buffer_info);
+		}
 	}
 
 	{ // Item icons
@@ -2183,41 +2197,28 @@ void VulkanAPI::destroyTextRenderer()
 	text_renderer.destroy();
 }
 
-void VulkanAPI::writeTextToImage(
-	Image & image,
+void VulkanAPI::writeTextToDebugImage(
+	VkCommandBuffer command_buffer,
 	const std::string & text,
 	const uint32_t x,
 	const uint32_t y,
 	const uint32_t font_size
 )
 {
-	const VkDeviceSize image_size = image.extent2D.width * image.extent2D.height * 4;
+	const VkDeviceSize image_size = debug_info_image.extent2D.width * debug_info_image.extent2D.height * 4;
 
-	VkBuffer staging_buffer;
-	VkDeviceMemory staging_buffer_memory;
-	createBuffer(
-		image_size,
-		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		staging_buffer,
-		staging_buffer_memory
-	);
+	Buffer & staging_buffer = debug_info_buffers[current_frame];
 
-	void * target;
-	VK_CHECK(
-		vkMapMemory(device, staging_buffer_memory, 0, VK_WHOLE_SIZE, 0, &target),
-		"Failed to map memory for text test image"
-	);
-	memset(target, 0, image_size);
+	memset(staging_buffer.mappedMemory(), 0, image_size);
 
 	text_renderer.renderText(
 		text,
 		x, y,
 		font_size,
-		target, image.extent2D.width, image.extent2D.height
+		staging_buffer.mappedMemory(),
+		debug_info_image.extent2D.width,
+		debug_info_image.extent2D.height
 	);
-
-	SingleTimeCommand command_buffer(device, command_pool, graphics_queue);
 
 	VkBufferImageCopy region = {};
 	region.bufferOffset = 0;
@@ -2228,9 +2229,9 @@ void VulkanAPI::writeTextToImage(
 	region.imageSubresource.baseArrayLayer = 0;
 	region.imageSubresource.layerCount = 1;
 	region.imageOffset = { 0, 0, 0 };
-	region.imageExtent = { image.extent2D.width, image.extent2D.height, 1 };
+	region.imageExtent = { debug_info_image.extent2D.width, debug_info_image.extent2D.height, 1 };
 
-	image.transitionLayout(
+	debug_info_image.transitionLayout(
 		command_buffer,
 		VK_IMAGE_LAYOUT_UNDEFINED,
 		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
@@ -2238,23 +2239,18 @@ void VulkanAPI::writeTextToImage(
 
 	vkCmdCopyBufferToImage(
 		command_buffer,
-		staging_buffer,
-		image.image,
+		staging_buffer.buffer,
+		debug_info_image.image,
 		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 		1,
 		&region
 	);
 
-	image.transitionLayout(
+	debug_info_image.transitionLayout(
 		command_buffer,
 		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	);
-
-	command_buffer.end();
-
-	vkDestroyBuffer(device, staging_buffer, nullptr);
-	vkFreeMemory(device, staging_buffer_memory, nullptr);
 }
 
 

@@ -251,7 +251,7 @@ void RenderThread::loop()
 	memcpy(vk.light_mat_ubo.mapped_memory[vk.current_frame], &shadow_map_light, sizeof(shadow_map_light));
 	memcpy(vk.atmosphere_ubo.mapped_memory[vk.current_frame], &atmosphere_params, sizeof(atmosphere_params));
 
-	// vk.writeTextToImage(vk.debug_info_image, debug_text, 10, 10, 32);
+	vk.writeTextToDebugImage(vk.draw_command_buffers[vk.current_frame], debug_text, 10, 10, 32);
 
 	shadowPass();
 	lightingPass();
