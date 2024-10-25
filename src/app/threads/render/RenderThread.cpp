@@ -43,16 +43,16 @@ void RenderThread::launch()
 
 		while (!m_thread.get_stop_token().stop_requested())
 		{
-			auto start_time = std::chrono::high_resolution_clock::now();
+			// auto start_time = std::chrono::high_resolution_clock::now();
 			loop();
-			auto end_time = std::chrono::high_resolution_clock::now();
+			// auto end_time = std::chrono::high_resolution_clock::now();
 
-			// i want 60fps so if not enough time passed wait a bit
-			std::chrono::nanoseconds frame_time = end_time - start_time;
-			if (frame_time < std::chrono::nanoseconds(16666666))
-			{
-				std::this_thread::sleep_for(std::chrono::nanoseconds(16666666) - frame_time);
-			}
+			// // i want 60fps so if not enough time passed wait a bit
+			// std::chrono::nanoseconds frame_time = end_time - start_time;
+			// if (frame_time < std::chrono::nanoseconds(16666666))
+			// {
+			// 	std::this_thread::sleep_for(std::chrono::nanoseconds(16666666) - frame_time);
+			// }
 		}
 	}
 	catch (const std::exception & e)
@@ -212,10 +212,15 @@ void RenderThread::loop()
 	{
 		ZoneScopedN("Wait for in_flight_fences");
 
+		const std::chrono::nanoseconds start_cpu_wait_time = std::chrono::steady_clock::now().time_since_epoch();
+
 		VK_CHECK(
 			vkWaitForFences(vk.device, 1, &vk.in_flight_fences[vk.current_frame], VK_TRUE, std::numeric_limits<uint64_t>::max()),
 			"Failed to wait for in flight fence"
 		);
+
+		const std::chrono::nanoseconds end_cpu_wait_time = std::chrono::steady_clock::now().time_since_epoch();
+		DebugGui::cpu_wait_time_history.push((end_cpu_wait_time - start_cpu_wait_time).count() / 1e6);
 	}
 	vkResetFences(vk.device, 1, &vk.in_flight_fences[vk.current_frame]);
 
@@ -246,7 +251,7 @@ void RenderThread::loop()
 	memcpy(vk.light_mat_ubo.mapped_memory[vk.current_frame], &shadow_map_light, sizeof(shadow_map_light));
 	memcpy(vk.atmosphere_ubo.mapped_memory[vk.current_frame], &atmosphere_params, sizeof(atmosphere_params));
 
-	vk.writeTextToImage(vk.debug_info_image, debug_text, 10, 10, 32);
+	// vk.writeTextToImage(vk.debug_info_image, debug_text, 10, 10, 32);
 
 	shadowPass();
 	lightingPass();
