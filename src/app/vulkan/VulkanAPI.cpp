@@ -301,8 +301,10 @@ void VulkanAPI::loadVulkanFunctions()
 		throw std::runtime_error("Failed to load Vulkan function: " #name); \
 	}
 
-	VK_LOAD_FUNCTION(vkCreateDebugUtilsMessengerEXT)
-	VK_LOAD_FUNCTION(vkDestroyDebugUtilsMessengerEXT)
+	#ifndef NDEBUG
+		VK_LOAD_FUNCTION(vkCreateDebugUtilsMessengerEXT)
+		VK_LOAD_FUNCTION(vkDestroyDebugUtilsMessengerEXT)
+	#endif
 
 	VK_LOAD_FUNCTION(vkGetPhysicalDeviceCalibrateableTimeDomainsEXT)
 	VK_LOAD_FUNCTION(vkGetCalibratedTimestampsEXT)
@@ -2441,22 +2443,54 @@ void VulkanAPI::setupImgui()
 
 void VulkanAPI::setupTracy()
 {
-	const char * const ctx_name = "Gpu rendering";
-	(void)ctx_name;
-	ctx = TracyVkContextCalibrated(
-		physical_device,
-		device,
-		graphics_queue,
-		draw_command_buffers[0],
-		vkGetPhysicalDeviceCalibrateableTimeDomainsEXT,
-		vkGetCalibratedTimestampsEXT
-	);
-	TracyVkContextName(ctx, ctx_name, strlen(ctx_name));
+	{
+		const char * const ctx_name = "Draw context";
+		(void)ctx_name;
+		draw_ctx = TracyVkContextCalibrated(
+			physical_device,
+			device,
+			graphics_queue,
+			draw_command_buffers[0],
+			vkGetPhysicalDeviceCalibrateableTimeDomainsEXT,
+			vkGetCalibratedTimestampsEXT
+		);
+		TracyVkContextName(draw_ctx, ctx_name, strlen(ctx_name));
+	}
+
+	{
+		const char * const ctx_name = "Copy to swapchain context";
+		(void)ctx_name;
+		copy_to_swapchain_ctx = TracyVkContextCalibrated(
+			physical_device,
+			device,
+			graphics_queue,
+			draw_command_buffers[0],
+			vkGetPhysicalDeviceCalibrateableTimeDomainsEXT,
+			vkGetCalibratedTimestampsEXT
+		);
+		TracyVkContextName(copy_to_swapchain_ctx, ctx_name, strlen(ctx_name));
+	}
+
+	{
+		const char * const ctx_name = "Imgui context";
+		(void)ctx_name;
+		imgui_ctx = TracyVkContextCalibrated(
+			physical_device,
+			device,
+			graphics_queue,
+			draw_command_buffers[0],
+			vkGetPhysicalDeviceCalibrateableTimeDomainsEXT,
+			vkGetCalibratedTimestampsEXT
+		);
+		TracyVkContextName(imgui_ctx, ctx_name, strlen(ctx_name));
+	}
 }
 
 void VulkanAPI::destroyTracy()
 {
-	TracyVkDestroy(ctx);
+	TracyVkDestroy(draw_ctx);
+	TracyVkDestroy(copy_to_swapchain_ctx);
+	TracyVkDestroy(imgui_ctx);
 }
 
 

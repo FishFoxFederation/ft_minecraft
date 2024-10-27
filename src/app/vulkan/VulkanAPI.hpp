@@ -449,7 +449,9 @@ public:
 	TracyLockableN (std::mutex, global_mutex, "Vulkan Global Mutex");
 
 
-	TracyVkCtx ctx;
+	TracyVkCtx draw_ctx;
+	TracyVkCtx copy_to_swapchain_ctx;
+	TracyVkCtx imgui_ctx;
 
 	// function pointers
 	PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT;
