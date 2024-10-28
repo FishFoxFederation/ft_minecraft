@@ -342,6 +342,7 @@ public:
 	VkFramebuffer prerender_item_icon_framebuffer;
 
 	VkCommandPool command_pool;
+	std::vector<VkCommandBuffer> draw_shadow_pass_command_buffers;
 	std::vector<VkCommandBuffer> draw_command_buffers;
 	std::vector<VkCommandBuffer> copy_command_buffers;
 	std::vector<VkCommandBuffer> compute_command_buffers;
@@ -352,6 +353,7 @@ public:
 	TracyLockableN (std::mutex, transfer_operation_mutex, "Vulkan Transfer Operation");
 
 	std::vector<VkSemaphore> image_available_semaphores;
+	std::vector<VkSemaphore> shadow_pass_finished_semaphores;
 	std::vector<VkSemaphore> main_render_finished_semaphores;
 	std::vector<VkSemaphore> compute_finished_semaphores;
 	std::vector<VkSemaphore> copy_finished_semaphores;

@@ -125,6 +125,7 @@ VulkanAPI::~VulkanAPI()
 	for (int i = 0; i < max_frames_in_flight; i++)
 	{
 		vkDestroySemaphore(device, image_available_semaphores[i], nullptr);
+		vkDestroySemaphore(device, shadow_pass_finished_semaphores[i], nullptr);
 		vkDestroySemaphore(device, main_render_finished_semaphores[i], nullptr);
 		vkDestroySemaphore(device, compute_finished_semaphores[i], nullptr);
 		vkDestroySemaphore(device, copy_finished_semaphores[i], nullptr);
@@ -133,6 +134,7 @@ VulkanAPI::~VulkanAPI()
 	}
 	vkDestroyFence(device, single_time_command_fence, nullptr);
 
+	vkFreeCommandBuffers(device, command_pool, static_cast<uint32_t>(draw_shadow_pass_command_buffers.size()), draw_shadow_pass_command_buffers.data());
 	vkFreeCommandBuffers(device, command_pool, static_cast<uint32_t>(draw_command_buffers.size()), draw_command_buffers.data());
 	vkFreeCommandBuffers(device, command_pool, static_cast<uint32_t>(copy_command_buffers.size()), copy_command_buffers.data());
 	vkFreeCommandBuffers(device, command_pool, static_cast<uint32_t>(compute_command_buffers.size()), compute_command_buffers.data());
@@ -786,6 +788,7 @@ void VulkanAPI::createCommandPool()
 
 void VulkanAPI::createCommandBuffer()
 {
+	draw_shadow_pass_command_buffers.resize(max_frames_in_flight);
 	draw_command_buffers.resize(max_frames_in_flight);
 	copy_command_buffers.resize(max_frames_in_flight);
 	compute_command_buffers.resize(max_frames_in_flight);
@@ -797,6 +800,10 @@ void VulkanAPI::createCommandBuffer()
 	alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	alloc_info.commandBufferCount = static_cast<uint32_t>(max_frames_in_flight);
 
+	VK_CHECK(
+		vkAllocateCommandBuffers(device, &alloc_info, draw_shadow_pass_command_buffers.data()),
+		"Failed to allocate command buffers"
+	);
 	VK_CHECK(
 		vkAllocateCommandBuffers(device, &alloc_info, draw_command_buffers.data()),
 		"Failed to allocate command buffers"
@@ -826,6 +833,7 @@ void VulkanAPI::createCommandBuffer()
 void VulkanAPI::createSyncObjects()
 {
 	image_available_semaphores.resize(max_frames_in_flight);
+	shadow_pass_finished_semaphores.resize(max_frames_in_flight);
 	main_render_finished_semaphores.resize(max_frames_in_flight);
 	compute_finished_semaphores.resize(max_frames_in_flight);
 	copy_finished_semaphores.resize(max_frames_in_flight);
@@ -843,6 +851,10 @@ void VulkanAPI::createSyncObjects()
 	{
 		VK_CHECK(
 			vkCreateSemaphore(device, &semaphore_info, nullptr, &image_available_semaphores[i]),
+			"Failed to create semaphores"
+		);
+		VK_CHECK(
+			vkCreateSemaphore(device, &semaphore_info, nullptr, &shadow_pass_finished_semaphores[i]),
 			"Failed to create semaphores"
 		);
 		VK_CHECK(

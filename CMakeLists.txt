@@ -7,7 +7,7 @@ project(ft_vox
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(TRACY_ENABLE "" OFF)
+option(TRACY_ENABLE "" ON)
 add_subdirectory(external/tracy)
 add_subdirectory(external/freetype/freetype-2.13.3)
 add_subdirectory(external/portaudio EXCLUDE_FROM_ALL)
@@ -34,8 +34,10 @@ target_compile_options(${PROJECT_NAME}
 		-Wno-unused-result
 		-Wno-c11-extensions
 		-Wno-maybe-uninitialized
-		-Wno-unused-function
 		-Wno-unused-variable
+		-Wno-unused-function
+
+		# -DNDEBUG
 )
 
 target_link_options(${PROJECT_NAME}
@@ -189,8 +191,8 @@ target_compile_options(server
 		-Wno-unused-result
 		-Wno-c11-extensions
 		-Wno-maybe-uninitialized
-		-Wno-unused-function
 		-Wno-unused-variable
+		-Wno-unused-function
 )
 
 target_link_options(server
