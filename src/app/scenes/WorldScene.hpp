@@ -127,6 +127,8 @@ public:
 	mutable std::mutex toolbar_items_mutex;
 	std::atomic<int> toolbar_cursor_index = 0;
 
+	mutable std::atomic<bool> enable_frustum_culling = false;
+
 private:
 
 	Camera m_camera;

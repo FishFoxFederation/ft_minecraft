@@ -74,11 +74,11 @@ void RenderThread::loop()
 	std::string current_frame = "Frame " + std::to_string(vk.current_frame);
 	ZoneText(current_frame.c_str(), current_frame.size());
 
-	//############################################################################################################
-	//					 																						 #
-	//							Do independent logic from the vulkan rendering here							#
-	//					 																						 #
-	//############################################################################################################
+	//###########################################################################################################
+	//																											#
+	//							Do independent logic from the vulkan rendering here								#
+	//																											#
+	//###########################################################################################################
 
 	{
 		ZoneScopedN("Prepare frame");
@@ -100,6 +100,14 @@ void RenderThread::loop()
 
 		camera_matrices.view = camera.view;
 		camera_matrices.proj = clip * camera.projection;
+
+		// if (m_world_scene.update_fc_matrices)
+		// {
+			camera_matrices_fc.view = camera.view;
+			camera_matrices_fc.proj = camera.projection;
+		// 	m_world_scene.update_fc_matrices = false;
+		// }
+
 
 		chunk_meshes = m_world_scene.chunk_mesh_list.values();
 		entity_meshes = m_world_scene.entity_mesh_list.values();
@@ -177,10 +185,15 @@ void RenderThread::loop()
 		}
 
 		debug_text = ft_format(
-			"fps: %d\nxyz: %.2f %.2f %.2f\n",
+			"fps: %d\n"
+			"xyz: %.2f %.2f %.2f\n"
+			"Chunk count: %d\n",
 			DebugGui::fps.load(),
-			DebugGui::player_position.get().x, DebugGui::player_position.get().y, DebugGui::player_position.get().z
+			DebugGui::player_position.get().x, DebugGui::player_position.get().y, DebugGui::player_position.get().z,
+			draw_chunk_count
 		);
+		draw_chunk_count = 0;
+
 		debug_text += ft_format(
 			"C: %.2f; E: %.2f; H: %.2f\n",
 			DebugGui::continentalness.load(),
@@ -192,11 +205,13 @@ void RenderThread::loop()
 			DebugGui::isOcean ?
 			"Water\n" : "Coast\n";
 
+
 		toolbar_cursor_index = m_world_scene.toolbar_cursor_index.load();
 		{
 			std::lock_guard lock(m_world_scene.toolbar_items_mutex);
 			toolbar_items = m_world_scene.toolbar_items;
 		}
+
 	}
 
 	//###########################################################################################################
@@ -491,14 +506,6 @@ void RenderThread::lightingPass()
 	{
 		TracyVkZone(vk.draw_ctx, vk.draw_command_buffers[vk.current_frame], "Lighting pass");
 
-		if (m_world_scene.show_debug_text)
-		{
-			ZoneScopedN("Write debug text");
-			TracyVkZone(vk.draw_ctx, vk.draw_command_buffers[vk.current_frame], "Write debug text");
-
-			vk.writeTextToDebugImage(vk.draw_command_buffers[vk.current_frame], debug_text, 10, 10, 32);
-		}
-
 		VkRenderPassBeginInfo lighting_render_pass_begin_info = {};
 		lighting_render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		lighting_render_pass_begin_info.renderPass = vk.lighting_render_pass;
@@ -547,6 +554,12 @@ void RenderThread::lightingPass()
 
 				for (auto & chunk_mesh: chunk_meshes)
 				{
+					if (!isInsideFrustum(chunk_mesh.model, CHUNK_SIZE_VEC3))
+					{
+						continue;
+					}
+					draw_chunk_count++;
+
 					ModelMatrice model_matrice = {};
 					model_matrice.model = chunk_mesh.model;
 
@@ -985,6 +998,14 @@ void RenderThread::lightingPass()
 		vkCmdEndRenderPass(vk.draw_command_buffers[vk.current_frame]);
 
 
+		if (m_world_scene.show_debug_text)
+		{
+			ZoneScopedN("Write debug text");
+			TracyVkZone(vk.draw_ctx, vk.draw_command_buffers[vk.current_frame], "Write debug text");
+
+			vk.writeTextToDebugImage(vk.draw_command_buffers[vk.current_frame], debug_text, 10, 10, 32);
+		}
+
 
 		VkRenderPassBeginInfo hud_render_pass_begin_info = {};
 		hud_render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -1382,4 +1403,63 @@ void RenderThread::drawDebugGui()
 		vkEndCommandBuffer(vk.imgui_command_buffers[vk.current_frame]),
 		"Failed to record imgui command buffer"
 	);
+}
+
+bool RenderThread::isInsideFrustum(const glm::mat4 & model, const glm::vec3 & size) const
+{
+	if (!m_world_scene.enable_frustum_culling)
+	{
+		return true;
+	}
+
+	const std::vector<glm::vec4> corners = {
+		glm::vec4(0,      0,      0,      1),
+		glm::vec4(size.x, 0,      0,      1),
+		glm::vec4(0,      size.y, 0,      1),
+		glm::vec4(size.x, size.y, 0,      1),
+		glm::vec4(0,      0,      size.z, 1),
+		glm::vec4(size.x, 0,      size.z, 1),
+		glm::vec4(0,      size.y, size.z, 1),
+		glm::vec4(size.x, size.y, size.z, 1)
+	};
+
+	const glm::mat4 MVP = camera_matrices_fc.proj * camera_matrices_fc.view * model;
+
+	glm::vec3 min = glm::vec3(std::numeric_limits<float>::max());
+	glm::vec3 max = glm::vec3(std::numeric_limits<float>::min());
+	for (const auto & corner : corners)
+	{
+		const glm::vec4 clip_space = MVP * corner;
+		const glm::vec3 ndc_space = glm::vec3(clip_space) / clip_space.w;
+
+		min.x = std::min(min.x, ndc_space.x);
+		min.y = std::min(min.y, ndc_space.y);
+		min.z = std::min(min.z, ndc_space.z);
+		max.x = std::max(max.x, ndc_space.x);
+		max.y = std::max(max.y, ndc_space.y);
+		max.z = std::max(max.z, ndc_space.z);
+	}
+
+	return (
+		min.x <= 1.0f && max.x >= -1.0f &&
+		min.y <= 1.0f && max.y >= -1.0f &&
+		min.z <= 1.0f && max.z >= 0.0f
+	);
+
+	// bool inside = false;
+	// for (const auto & corner : corners)
+	// {
+	// 	const glm::vec4 clip_space = MVP * corner;
+
+	// 	inside = inside || (
+	// 		clip_space.x >= -clip_space.w &&
+	// 		clip_space.x <= clip_space.w &&
+	// 		clip_space.y >= -clip_space.w &&
+	// 		clip_space.y <= clip_space.w &&
+	// 		clip_space.z >= 0.0f &&
+	// 		clip_space.z <= clip_space.w
+	// 	);
+	// }
+
+	// return inside;
 }

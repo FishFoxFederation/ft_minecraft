@@ -7,7 +7,7 @@ project(ft_vox
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(TRACY_ENABLE "" ON)
+option(TRACY_ENABLE "" OFF)
 add_subdirectory(external/tracy)
 add_subdirectory(external/freetype/freetype-2.13.3)
 add_subdirectory(external/portaudio EXCLUDE_FROM_ALL)

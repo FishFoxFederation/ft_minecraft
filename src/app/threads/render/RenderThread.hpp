@@ -88,6 +88,7 @@ private:
 	);
 	Camera::RenderInfo camera;
 	ViewProjMatrices camera_matrices = {};
+	ViewProjMatrices camera_matrices_fc = {};
 
 	std::vector<WorldScene::ChunkMeshRenderData> chunk_meshes;
 	std::vector<WorldScene::MeshRenderData> entity_meshes;
@@ -104,6 +105,7 @@ private:
 	ShadowMapLight shadow_map_light = {};
 
 	std::string debug_text;
+	int draw_chunk_count = 0;
 
 	std::array<ItemInfo::Type, 9> toolbar_items;
 	int toolbar_cursor_index = 0;
@@ -146,5 +148,7 @@ private:
 		const float cam_far_plane,
 		std::vector<float> & far_plane_distances
 	);
+
+	bool isInsideFrustum(const glm::mat4 & model, const glm::vec3 & size) const;
 
 };
