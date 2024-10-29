@@ -25,20 +25,6 @@ glm::ivec3 getBlockChunkPos(const glm::ivec3 & block_pos);
 class Chunk
 {
 public:
-	struct biomeInfo
-	{
-		biomeInfo() = default;
-		biomeInfo(const biomeInfo & other) = default;
-		biomeInfo(biomeInfo && other) = default;
-		biomeInfo & operator=(const biomeInfo & other) = default;
-		biomeInfo & operator=(biomeInfo && other) = default;
-		bool isLand = false;
-		bool isOcean = false;
-		bool isCoast = false;
-		float continentalness = 0;
-		float erosion = 0;
-		float humidity = 0;
-	};
 	enum class genLevel : uint16_t
 	{
 		LIGHT,
@@ -54,6 +40,24 @@ public:
 		OCEAN,
 		COAST,
 		NONE
+	};
+	struct biomeInfo
+	{
+		biomeInfo() = default;
+		biomeInfo(const biomeInfo & other) = default;
+		biomeInfo(biomeInfo && other) = default;
+		biomeInfo & operator=(const biomeInfo & other) = default;
+		biomeInfo & operator=(biomeInfo && other) = default;
+		bool isLand = false;
+		bool isOcean = false;
+		bool isCoast = false;
+		float continentalness = 0;
+		float erosion = 0;
+		float humidity = 0;
+		float temperature = 0;
+		float weirdness = 0;
+		float PV = 0;
+		e_biome biome = e_biome::NONE;
 	};
 
 	typedef std::array<BlockInfo::Type, BLOCKS_PER_CHUNK> BlockArray;
@@ -80,6 +84,7 @@ public:
 	BlockInfo::Type				getBlock(const glm::ivec3 & position) const;
 	void				setBlock(const int & x, const int & y, const int & z, BlockInfo::Type block);
 	void 				setBlock(const glm::ivec3 & position, BlockInfo::Type block);
+	void 				setBlockColumn(const int & x, const int & z, const std::array<BlockInfo::Type, CHUNK_Y_SIZE> & column);
 
 	LightArray &		getLight();
 	const LightArray &	getLight() const;
@@ -162,7 +167,7 @@ private:
 };
 
 typedef std::unordered_map<glm::ivec3, std::shared_ptr<Chunk>> ChunkMap;
-
+typedef Chunk::e_biome BiomeType;
 namespace std
 {
 	template<>

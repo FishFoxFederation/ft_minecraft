@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-typedef int_fast8_t	BlockType;
 typedef uint64_t BlockProperties;
 typedef uint32_t TextureID;
 
@@ -25,7 +24,6 @@ typedef uint32_t TextureID;
 #define BLOCK_FACE_LEFT		3
 #define BLOCK_FACE_FRONT	4
 #define BLOCK_FACE_BACK		5
-
 class BlockInfo
 {
 
@@ -75,6 +73,7 @@ public:
 
 };
 
+typedef BlockInfo::Type BlockType;
 class BlocksInfo
 {
 

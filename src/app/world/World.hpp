@@ -124,28 +124,68 @@ public:
 		*/
 		Perlin	m_relief_perlin;
 		Perlin	m_cave_perlin;
+
 		
 		// BIOMES PERLINS
 		Perlin	m_continentalness_perlin;
-
+		Perlin  m_erosion_perlin;
+		Perlin  m_weirdness_perlin;
+		Perlin  m_temperature_perlin;
+		Perlin  m_humidity_perlin;
 
 		World & m_world;
 
 
-		BlockInfo::Type generateCaveBlock(glm::ivec3 position);
-		BlockInfo::Type generateReliefBlock(glm::ivec3 position);
 
-		float	generateReliefValue(glm::ivec2 position);
+		/*********************\
+		* NOISE MANIPULATION *
+		\*********************/
+		float calculatePeaksAndValleys(const float & weirdness);
+		float calculateHeightBias(const float & erosion, const float & PV);
+		float calculateBaseHeight(const float & continentalness, const float & erosion, const float & PV);
+		int   temperatureLevel(const float & temperature);
+		int   humidityLevel(const float & humidity);
 
-		void	lightPass(const glm::ivec3 & pos);
-		void	reliefPass(const glm::ivec3 & pos);
-		void 	decoratePass(const glm::ivec3 & pos);
+		BiomeType 							getBiomeType(
+			const float & continentalness,
+			const float & erosion,
+			const float & humidity,
+			const float & temperature,
+			const float & weirdness,
+			const float & PV);
+		std::array<BlockType, CHUNK_Y_SIZE> getBlockColumn(int baseHeight, BiomeType biome);
 
+
+
+
+
+		/****************************************\
+		*
+		* GENERATION PASSES
+		*
+		\****************************************/
 		void	setupPass(genStruct & genData,const glm::ivec3 & chunk_pos, Chunk::genLevel gen_level);
-
 		void	addPassToGraph(genStruct & genData, glm::ivec3 chunk_pos, Chunk::genLevel gen_level);
 		
+		void	lightPass(const glm::ivec3 & pos);
+
+		void	reliefPass(const glm::ivec3 & pos);
+
+		void	newReliefPass(const glm::ivec3 & pos);
+		/********************\
+		* RELIEF PASS UTILS
+		\********************/
+		BlockInfo::Type generateCaveBlock(glm::ivec3 position);
+		float	generateReliefValue(glm::ivec2 position);
+
+		void 	decoratePass(const glm::ivec3 & pos);
+		/********************\
+		* DECORATE PASS UTILS
+		\********************/
 		void	placeStructure(ChunkMap & chunkGrid, const glm::ivec3 & start_pos, const StructureInfo & structure);
+		/*
+		* BLOCK PLACING UTILS
+		*/
 	};
 
 	World();
