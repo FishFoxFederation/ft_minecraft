@@ -111,6 +111,7 @@ private:
 	 */
 	unsigned int 	hash(const glm::uvec3 & v, const unsigned int & seed) const;
 
+	uint_fast8_t   testHash(const glm::uvec3 & v, const unsigned int & seed) const; 
 	/**
 	 * @brief Get one of the 16 predefined vectors ( see improved perlin articles for explanations )
 	 * 
