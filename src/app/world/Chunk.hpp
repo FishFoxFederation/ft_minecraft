@@ -39,6 +39,8 @@ public:
 		MOUNTAIN,
 		OCEAN,
 		COAST,
+		DESERT,
+		RIVER,
 		NONE
 	};
 	struct biomeInfo
@@ -85,6 +87,7 @@ public:
 	void				setBlock(const int & x, const int & y, const int & z, BlockInfo::Type block);
 	void 				setBlock(const glm::ivec3 & position, BlockInfo::Type block);
 	void 				setBlockColumn(const int & x, const int & z, const std::array<BlockInfo::Type, CHUNK_Y_SIZE> & column);
+	void 				setBlockColumn(const glm::ivec2 & pos, const std::array<BlockInfo::Type, CHUNK_Y_SIZE> & column);
 
 	LightArray &		getLight();
 	const LightArray &	getLight() const;

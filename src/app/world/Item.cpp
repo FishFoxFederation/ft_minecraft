@@ -6,35 +6,39 @@ ItemsInfo::ItemsInfo():
 	m_info({
 		{
 			.type = ItemInfo::Type::GrassBlock,
-			.block_id = BlockInfo::Type::Grass
+			.block_id = BlockType::Grass
 		},
 		{
 			.type = ItemInfo::Type::DirtBlock,
-			.block_id = BlockInfo::Type::Dirt
+			.block_id = BlockType::Dirt
 		},
 		{
 			.type = ItemInfo::Type::StoneBlock,
-			.block_id = BlockInfo::Type::Stone
+			.block_id = BlockType::Stone
 		},
 		{
 			.type = ItemInfo::Type::WaterBlock,
-			.block_id = BlockInfo::Type::Water
+			.block_id = BlockType::Water
 		},
 		{
 			.type = ItemInfo::Type::GlassBlock,
-			.block_id = BlockInfo::Type::Glass
+			.block_id = BlockType::Glass
 		},
 		{
 			.type = ItemInfo::Type::LightBlock,
-			.block_id = BlockInfo::Type::Light
+			.block_id = BlockType::Light
 		},
 		{
 			.type = ItemInfo::Type::WoodBlock,
-			.block_id = BlockInfo::Type::Wood
+			.block_id = BlockType::Wood
 		},
 		{
 			.type = ItemInfo::Type::LeavesBlock,
-			.block_id = BlockInfo::Type::Leaves
+			.block_id = BlockType::Leaves
+		},
+		{
+			.type = ItemInfo::Type::SandBlock,
+			.block_id = BlockType::Sand
 		}
 	})
 {

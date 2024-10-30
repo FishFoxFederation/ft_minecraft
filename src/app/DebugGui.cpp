@@ -23,18 +23,30 @@ DebugGui::DebugGui(
 	// Tuto pour Augustus:
 
 	// Créer une texture de 100x100
-	imgui_texture_id = vk.createImGuiTexture(100, 100);
+	continentalness_texture_id = vk.createImGuiTexture(NOISE_SIZE, NOISE_SIZE);
+	erosion_texture_id = vk.createImGuiTexture(NOISE_SIZE, NOISE_SIZE);
+	PV_texture_id = vk.createImGuiTexture(NOISE_SIZE, NOISE_SIZE);
+	temperature_texture_id = vk.createImGuiTexture(NOISE_SIZE, NOISE_SIZE);
+	humidity_texture_id = vk.createImGuiTexture(NOISE_SIZE, NOISE_SIZE);
+	weirdness_texture_id = vk.createImGuiTexture(NOISE_SIZE, NOISE_SIZE);
+	biome_texture_id = vk.createImGuiTexture(NOISE_SIZE, NOISE_SIZE);
 	// imgui_texture_id est declaré dans DebugGui.hpp, rajoute d'autres id si tu veux plus de textures
 
 	// Clear la texture
-	vk.ImGuiTextureClear(imgui_texture_id);
+	// vk.ImGuiTextureClear(continentalness_texture_id);
 
-	// Dessiner des pixels rouges sur la texture
-	for (int x = 0; x < 100; x++)
+
+	for(int x = 0; x < NOISE_SIZE; x++)
 	{
-		for (int y = 0; y < 100; y++)
+		for(int y = 0; y < NOISE_SIZE; y++)
 		{
-			vk.ImGuiTexturePutPixel(imgui_texture_id, x, y, 255, 0, 0);
+			vk.ImGuiTexturePutPixel(continentalness_texture_id, x, y, 255, 255, 255);
+			vk.ImGuiTexturePutPixel(erosion_texture_id, x, y, 255, 255, 255);
+			vk.ImGuiTexturePutPixel(PV_texture_id, x, y, 255, 255, 255);
+			vk.ImGuiTexturePutPixel(temperature_texture_id, x, y, 255, 255, 255);
+			vk.ImGuiTexturePutPixel(humidity_texture_id, x, y, 255, 255, 255);
+			vk.ImGuiTexturePutPixel(weirdness_texture_id, x, y, 255, 255, 255);
+			vk.ImGuiTexturePutPixel(biome_texture_id, x, y, 255, 255, 255);
 		}
 	}
 
@@ -133,8 +145,20 @@ void DebugGui::updateImGui()
 
 			if (ImGui::BeginTabItem("Textures for Augustus"))
 			{
-				vk.ImGuiTextureDraw(imgui_texture_id);
-
+				ImGui::Text("Continentalness");
+				vk.ImGuiTextureDraw(continentalness_texture_id);
+				ImGui::Text("Erosion");
+				vk.ImGuiTextureDraw(erosion_texture_id);
+				ImGui::Text("Weirdness");
+				vk.ImGuiTextureDraw(weirdness_texture_id);
+				ImGui::Text("PV");
+				vk.ImGuiTextureDraw(PV_texture_id);
+				ImGui::Text("Temperature");
+				vk.ImGuiTextureDraw(temperature_texture_id);
+				ImGui::Text("Humidity");
+				vk.ImGuiTextureDraw(humidity_texture_id);
+				ImGui::Text("Biome");
+				vk.ImGuiTextureDraw(biome_texture_id);
 				ImGui::EndTabItem();
 			}
 

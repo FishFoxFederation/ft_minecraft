@@ -67,6 +67,24 @@ BlocksInfo::BlocksInfo():
 			.absorb_light = 15
 		},
 		{
+			.id = BlockInfo::Type::Sand,
+			.texture = {
+				11, // sand
+				11, // sand
+				11, // sand
+				11, // sand
+				11, // sand
+				11  // sand
+			},
+			.properties =
+				BLOCK_PROPERTY_SOLID
+				| BLOCK_PROPERTY_OPAQUE
+				| BLOCK_PROPERTY_CUBE,
+			.hitbox = {{0, 0, 0}, {1, 1, 1}},
+			.emit_light = 0,
+			.absorb_light = 15
+		},
+		{
 			.id = BlockInfo::Type::Water,
 			.texture = {
 				5, // water

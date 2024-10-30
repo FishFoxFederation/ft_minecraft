@@ -187,10 +187,31 @@ void RenderThread::loop()
 			DebugGui::erosion.load(),
 			DebugGui::humidity.load()
 		);
-		debug_text += DebugGui::isLand.load() ?
-		"Land\n" : 
-			DebugGui::isOcean ?
-			"Water\n" : "Coast\n";
+
+		switch(DebugGui::biome.load())
+		{
+		case 0:
+			debug_text += "Forest";
+			break;
+		case 1:
+			debug_text += "Plain";
+			break;
+		case 2:
+			debug_text += "Mountain";
+			break;
+		case 3:
+			debug_text += "Ocean";
+			break;
+		case 4:
+			debug_text += "Coast";
+			break;
+		case 5:
+			debug_text += "Desert";
+			break;
+		case 6:
+			debug_text += "River";
+			break;
+		};
 
 		toolbar_cursor_index = m_world_scene.toolbar_cursor_index.load();
 		{

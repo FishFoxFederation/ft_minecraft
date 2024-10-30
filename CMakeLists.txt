@@ -326,3 +326,123 @@ target_include_directories(server
 )
 
 target_link_libraries(server glfw vulkan dl pthread X11 Xxf86vm Xrandr Xi Tracy::TracyClient freetype portaudio_static)
+
+add_executable(test_perlin)
+
+target_sources(test_perlin
+	PRIVATE
+		main_perlin.cpp
+		src/tracy_globals.cpp
+
+		src/utils/logger.cpp
+
+		src/app/perlin/Perlin.cpp
+
+		src/app/DebugGui.cpp
+		src/app/Settings.cpp
+		src/app/scenes/Camera.cpp
+		src/app/scenes/WorldScene.cpp
+		src/app/threads/Status.cpp
+		src/app/threads/render/RenderThread.cpp
+		src/app/threads/render/CascadedShadowMapping.cpp
+		src/app/threads/pool/ThreadPool.cpp
+		src/app/threads/pool/ThreadPoolAccessor.cpp
+		src/app/vulkan/VulkanAPI.cpp
+		src/app/vulkan/VulkanMemoryAllocator.cpp
+		src/app/vulkan/chunk_mesh.cpp
+		src/app/vulkan/vk_helper.cpp
+		src/app/vulkan/Image.cpp
+		src/app/vulkan/Command.cpp
+		src/app/vulkan/Descriptor.cpp
+		src/app/vulkan/Swapchain.cpp
+		src/app/vulkan/TextRenderer.cpp
+		src/app/vulkan/Buffer.cpp
+		src/app/vulkan/item_mesh.cpp
+		src/app/window/window.cpp
+		src/app/window/input.cpp
+		src/app/world/Chunk.cpp
+		src/app/world/entity/Player.cpp
+		src/app/world/entity/HitBox.cpp
+		src/app/world/entity/Mob.cpp
+		src/app/world/World.cpp
+		src/app/world/WorldGenerator.cpp
+		src/app/world/Block.cpp
+		src/app/world/structures/Structures.cpp
+		src/app/world/Item.cpp
+		src/app/world/CreateMeshData.cpp
+		src/app/sound/SoundEngine.cpp
+		src/app/sound/AudioData.cpp
+		src/app/event/AbstractEvent.cpp
+		src/app/event/EventManager.cpp
+
+		external/imgui/imgui.cpp
+		external/imgui/imgui_draw.cpp
+		external/imgui/imgui_widgets.cpp
+		external/imgui/imgui_tables.cpp
+		external/imgui/imgui_demo.cpp
+		external/imgui/backends/imgui_impl_glfw.cpp
+		external/imgui/backends/imgui_impl_vulkan.cpp
+
+		external/tracy/public/TracyClient.cpp
+)
+
+target_compile_options(test_perlin
+	PRIVATE
+		-O3
+		-g3
+		# -fsanitize=thread
+		-Wall
+		-Wextra
+		-Werror
+		-Wpedantic
+		-Wno-missing-braces
+
+		# for tracy
+		-Wno-missing-field-initializers
+		-Wno-unused-parameter
+		-Wno-empty-body
+		-Wno-unused-result
+		-Wno-c11-extensions
+		-Wno-maybe-uninitialized
+		-Wno-unused-function
+		-Wno-unused-variable
+)
+
+target_link_options(test_perlin
+	PRIVATE
+		# -fsanitize=thread
+)
+
+# include directories (equivalent to -I)
+target_include_directories(test_perlin
+	PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}/src
+		${CMAKE_CURRENT_SOURCE_DIR}/src/utils
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app/scenes
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app/threads
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app/threads/pool
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app/threads/render
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app/threads/update
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app/threads/block_update
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app/threads/task_manager
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app/vulkan
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app/window
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app/perlin
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app/world
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app/world/entity
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app/world/structures
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app/network
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app/sound
+		${CMAKE_CURRENT_SOURCE_DIR}/src/app/event
+
+		${CMAKE_CURRENT_SOURCE_DIR}/external/glm
+		${CMAKE_CURRENT_SOURCE_DIR}/external/stb
+		${CMAKE_CURRENT_SOURCE_DIR}/external/imgui
+		${CMAKE_CURRENT_SOURCE_DIR}/external/imgui/backends
+		${CMAKE_CURRENT_SOURCE_DIR}/external/tracy/public/tracy
+		${CMAKE_CURRENT_SOURCE_DIR}/external/freetype/freetype-2.13.3/include
+		${CMAKE_CURRENT_SOURCE_DIR}/external/portaudio/include
+)
+
+target_link_libraries(test_perlin glfw vulkan dl pthread X11 Xxf86vm Xrandr Xi Tracy::TracyClient freetype portaudio_static)

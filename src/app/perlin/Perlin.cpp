@@ -1,4 +1,5 @@
 #include "Perlin.hpp"
+#include "math_utils.hpp"
 #include <iostream>
 
 Perlin::Perlin(unsigned int seed)
@@ -216,7 +217,7 @@ float Perlin::noise(const float & x) const
 
 float Perlin::noise(const glm::vec2 & v) const
 {
-	return noise(glm::vec3(v, 0.5f));
+	return mapRange(noise(glm::vec3(v, 0.5f)), -0.8f, 0.8f, -1.0f, 1.0f);
 }
 
 float Perlin::noise(const glm::vec3 & v) const

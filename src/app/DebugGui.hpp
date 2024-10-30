@@ -102,6 +102,7 @@ class DebugGui
 {
 
 public:
+static constexpr int NOISE_SIZE = 256;
 
 	DebugGui(
 		VulkanAPI & vk
@@ -129,6 +130,7 @@ public:
 	static inline std::atomic<float>	humidity;
 	static inline std::atomic<bool>		isLand;
 	static inline std::atomic<bool> 	isOcean;
+	static inline std::atomic<uint8_t>  biome;
 
 	// Render Thread times
 	static inline History<float, 100> frame_time_history;
@@ -167,4 +169,12 @@ public:
 	static inline std::atomic<int> n_light_samples = 4.0f;
 
 	static inline std::atomic<uint64_t> imgui_texture_id = 0;
+
+	static inline std::atomic<uint64_t> continentalness_texture_id = 0;
+	static inline std::atomic<uint64_t> weirdness_texture_id = 0;
+	static inline std::atomic<uint64_t> temperature_texture_id = 0;
+	static inline std::atomic<uint64_t> PV_texture_id = 0;
+	static inline std::atomic<uint64_t> erosion_texture_id = 0;
+	static inline std::atomic<uint64_t> humidity_texture_id = 0;
+	static inline std::atomic<uint64_t> biome_texture_id = 0;
 };

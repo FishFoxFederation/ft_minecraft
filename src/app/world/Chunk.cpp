@@ -111,6 +111,17 @@ void Chunk::setBlock(const glm::ivec3 & position, BlockInfo::Type block)
 	setBlock(position.x, position.y, position.z, block);
 }
 
+void Chunk::setBlockColumn(const int & x, const int & z, const std::array<BlockType, CHUNK_Y_SIZE> & column)
+{
+	for (int y = 0; y < CHUNK_Y_SIZE; y++)
+		setBlock(x, y, z, column[y]);
+}
+
+void Chunk::setBlockColumn(const glm::ivec2 & pos, const std::array<BlockType, CHUNK_Y_SIZE> & column)
+{
+	setBlockColumn(pos.x, pos.y, column);
+}
+
 
 Chunk::LightArray & Chunk::getLight()
 {
@@ -348,8 +359,6 @@ glm::ivec3	Chunk::toCoord(const int & index)
 	int z = (index - x - y) % CHUNK_Z_SIZE;
 	return glm::ivec3(x, y, z);
 }
-
-
 
 glm::ivec3 getChunkPos(const glm::ivec3 & block_pos)
 {

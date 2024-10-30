@@ -10,6 +10,7 @@
 #include "hashes.hpp"
 #include "Tracy.hpp"
 #include "Structures.hpp"
+#include "VulkanAPI.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
@@ -27,6 +28,9 @@ public:
 	using enum Chunk::genLevel;
 	public:
 		typedef std::unordered_set<glm::ivec3> ChunkGenList;
+
+
+		void drawNoises(VulkanAPI & vk);
 		// struct genInfo
 		// {
 		// 	struct zone
@@ -140,19 +144,26 @@ public:
 		/*********************\
 		* NOISE MANIPULATION *
 		\*********************/
-		float calculatePeaksAndValleys(const float & weirdness);
-		float calculateHeightBias(const float & erosion, const float & PV);
-		float calculateBaseHeight(const float & continentalness, const float & erosion, const float & PV);
-		int   temperatureLevel(const float & temperature);
-		int   humidityLevel(const float & humidity);
+		float	calculatePeaksAndValleys(const float & weirdness);
+		float	calculateHeightBias(const float & erosion, const float & PV);
+		float	calculateBaseHeight(const float & continentalness,
+			const float & pv,
+			const float & erosion,
+			BiomeType biome);
+		int		temperatureLevel(const float & temperature);
+		int		humidityLevel(const float & humidity);
+		int		continentalnessLevel(const float & continentalness);
+		int		erosionLevel(const float & erosion);
+		int		weirdnessLevel(const float & weirdness);
+		int		PVLevel(const float & PV);
 
 		BiomeType 							getBiomeType(
-			const float & continentalness,
-			const float & erosion,
-			const float & humidity,
-			const float & temperature,
-			const float & weirdness,
-			const float & PV);
+			const int & continentalness,
+			const int & erosion,
+			const int & humidity,
+			const int & temperature,
+			const int & weirdness,
+			const int & PV);
 		std::array<BlockType, CHUNK_Y_SIZE> getBlockColumn(int baseHeight, BiomeType biome);
 
 
@@ -221,6 +232,8 @@ public:
 	 */
 	std::shared_ptr<Chunk>	getChunk(const glm::ivec3 & position) const;
 	void 					insertChunk(const glm::ivec3 & position, std::shared_ptr<Chunk> chunk);
+
+	WorldGenerator &		getWorldGenerator();
 
 protected:
 

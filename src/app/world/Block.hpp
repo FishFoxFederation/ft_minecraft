@@ -35,6 +35,7 @@ public:
 		Grass,
 		Dirt,
 		Stone,
+		Sand,
 		Water,
 		Glass,
 		Light,
@@ -63,6 +64,7 @@ public:
 		"assets/textures/block/wood_top.png", // 8
 		"assets/textures/block/wood.png", // 9
 		"assets/textures/block/oak_leaves.png", // 10
+		"assets/textures/block/sand.png" //11
 		// "assets/textures/block/debug/white.png",
 		// "assets/textures/block/debug/right.png",
 		// "assets/textures/block/debug/left.png",

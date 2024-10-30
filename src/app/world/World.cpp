@@ -9,6 +9,11 @@ World::~World()
 {
 }
 
+World::WorldGenerator & World::getWorldGenerator()
+{
+	return m_world_generator;
+}
+
 glm::vec3 World::getBlockChunkPosition(const glm::vec3 & position)
 {
 	// glm::vec3 block_chunk_position = glm::ivec3(position) % CHUNK_SIZE_IVEC3;

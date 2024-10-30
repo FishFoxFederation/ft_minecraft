@@ -20,6 +20,7 @@ public:
 		LightBlock,
 		WoodBlock,
 		LeavesBlock,
+		SandBlock,
 		None
 
 	} const type = Type::None;

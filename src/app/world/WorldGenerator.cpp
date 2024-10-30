@@ -1,6 +1,7 @@
-#define GLM_FORCE_XYZW_ONLY
+// #define GLM_FORCE_XYZW_ONLY
 #include "WorldGenerator.hpp"
 #include "World.hpp"
+#include "VulkanAPI.hpp"
 
 #include "math_utils.hpp"
 #include <cmath>
@@ -9,7 +10,11 @@
 World::WorldGenerator::WorldGenerator(World & world)
 : m_relief_perlin(1, 7, 1, 0.35, 2),
   m_cave_perlin(1, 4, 1, 0.5, 2),
-  m_continentalness_perlin(10, 7, 1, 0.4, 2),
+  m_continentalness_perlin(10, 4, 0.003, 0.4, 2),
+  m_erosion_perlin(5, 2, 0.005, 0.5, 2),
+  m_weirdness_perlin(42, 2, 0.004, 0.5, 1.5),
+  m_temperature_perlin(7, 1, 0.005, 0.5, 2),
+  m_humidity_perlin(17, 1, 0.005, 0.5, 2),
   m_world(world)
 {
 	// for(size_t i = 0; i + 1 < ZONE_SIZES.size(); i++)
@@ -21,7 +26,6 @@ World::WorldGenerator::WorldGenerator(World & world)
 
 World::WorldGenerator::~WorldGenerator()
 {
-
 }
 
 /**
@@ -333,7 +337,8 @@ void World::WorldGenerator::setupPass(genStruct & genData, const glm::ivec3 & ch
 		if (chunk->getGenLevel() <= CAVE)
 			return;
 		genData.relief_graph->emplace([this, chunk_pos]{
-			reliefPass(chunk_pos);
+			// reliefPass(chunk_pos);
+			newReliefPass(chunk_pos);
 		});
 		break;
 	}
@@ -568,30 +573,40 @@ void World::WorldGenerator::newReliefPass(const glm::ivec3 & chunkPos3D)
 			float humidity = m_humidity_perlin.noise(current_world_pos);
 			float PV = calculatePeaksAndValleys(weirdness);
 			
+			int level_continent = continentalnessLevel(continentalness);
+			int level_erosion = erosionLevel(erosion);
+			int level_temperature = temperatureLevel(temperature);
+			int level_humidity = humidityLevel(humidity);
+			int level_weirdness = weirdnessLevel(weirdness);
+			int level_PV = PVLevel(PV);
+
+			BiomeType biome = getBiomeType(level_continent, level_erosion, level_humidity, level_temperature, level_weirdness, level_PV);
+
 			//we want continentalness to determine base height
 			//the more erosion the flatter the terrain
 			// positive PV means positive height bias
 			// negative PV means negative height bias
 			//and erosion as well as PV to determine the height bias
 			float heightBias = calculateHeightBias(erosion, PV);
-			int baseHeight = calculateBaseHeight(continentalness, erosion, PV);
-
-			BiomeType biome = getBiomeType(continentalness, erosion, humidity, temperature, weirdness, PV);
+			int baseHeight = calculateBaseHeight(continentalness, PV, erosion, biome);
 
 			std::array<BlockType, CHUNK_Y_SIZE> blocks = getBlockColumn(baseHeight, biome);
 			chunk->setBlockColumn(blockX, blockZ, blocks);
-			Chunk::biomeInfo biome_info{
-				false,
-				false,
-				false,
-				continentalness,
-				erosion,
-				weirdness,
-				temperature,
-				humidity,
-				biome
-			};
+			Chunk::biomeInfo biome_info;
+			biome_info.biome = biome;
 			chunk->setBiome(blockX, blockZ, biome_info);
+			// Chunk::biomeInfo biome_info{
+			// 	false,
+			// 	false,
+			// 	false,
+			// 	continentalness,
+			// 	erosion,
+			// 	weirdness,
+			// 	temperature,
+			// 	humidity,
+			// 	biome
+			// };
+			// chunk->setBiome(blockX, blockZ, biome_info);
 		}
 	}
 }
@@ -709,6 +724,296 @@ void World::WorldGenerator::placeStructure(ChunkMap & chunkGrid, const glm::ivec
 				if (current_chunk->getBlock(current_chunk_position) == BlockInfo::Type::Air)
 					current_chunk->setBlock(current_chunk_position, structure.getBlock({x, y ,z}));
 			}
+		}
+	}
+}
+
+
+
+/*****************************\
+ * NOISE MANIPULATION
+\*****************************/
+
+float World::WorldGenerator::calculatePeaksAndValleys(const float & weirdness)
+{
+	//1−|(3|x|)−2|
+	return (1 - std::abs((3 * std::abs(weirdness)) - 2));
+}
+
+//return a value between -1 1
+float World::WorldGenerator::calculateHeightBias(const float & erosion, const float & PV)
+{
+	float ret = PV;
+
+	float erosionBias = mapRange(erosion, -1.0f, 1.0f, 1.0f, 0.0f);
+
+	//higher the erosion the flatter the terrain
+	ret *= erosionBias;
+
+	return ret;
+}
+
+float World::WorldGenerator::calculateBaseHeight(const float & continentalness, const float & pv, const float & erosion, BiomeType biome) 
+{
+	float ret = continentalness;
+	
+	return mapRange(ret, 0.0f, 1.0f, 50.0f, 200.0f);
+}
+
+int World::WorldGenerator::temperatureLevel(const float & temperature)
+{
+	if (temperature < -0.45f) return 0;
+	if (temperature < -0.15f) return 1;
+	if (temperature < 0.2f) return 2;
+	if (temperature < 0.5f) return 3;
+	return 4;
+}
+
+int World::WorldGenerator::humidityLevel(const float & humidity)
+{
+	if (humidity < -0.45f) return 0;
+	if (humidity < -0.15f) return 1;
+	if (humidity < 0.2f) return 2;
+	if (humidity < 0.5f) return 3;
+	return 4;
+}
+
+int World::WorldGenerator::weirdnessLevel(const float & weirdness)
+{
+	if( weirdness > 0) return 1;
+	return 0;
+}
+
+int World::WorldGenerator::erosionLevel(const float & erosion)
+{
+	if (erosion < -0.80) return 0;
+	if (erosion < -0.35) return 1;
+	if (erosion < -0.20) return 2;
+	if (erosion < 0.05) return 3;
+	if (erosion < 0.45) return 4;
+	if (erosion < 0.20) return 5;
+	return 6;
+}
+
+int World::WorldGenerator::continentalnessLevel(const float & continentalness)
+{
+	if (continentalness < -0.2f) return 0;
+	if (continentalness < 0.0f) return 1;
+	return 2;
+}
+
+int World::WorldGenerator::PVLevel(const float & PV)
+{
+	if (PV < -0.8f) return 0;
+	if (PV < -0.6f) return 1;
+	if (PV < 0.2f) return 2;
+	if (PV < 0.7f) return 3;
+	return 4;
+}
+
+BiomeType World::WorldGenerator::getBiomeType(
+	const int & continentalness,
+	const int & erosion,
+	const int & humidity,
+	const int & temperature,
+	const int & weirdness,
+	const int & PV)
+{
+	if (continentalness == 0)
+		return BiomeType::OCEAN;
+	else {
+		if (PV == 0)
+			return BiomeType::RIVER;
+		if (PV == 4 && erosion < 3)
+			return BiomeType::MOUNTAIN;
+		if (continentalness == 1)
+		{
+			return BiomeType::COAST;
+		} else //inland biomes
+		{
+			if (temperature >= 3)
+				return BiomeType::DESERT;
+			if (humidity > 1)
+				return BiomeType::FOREST;
+		}
+	}
+	return BiomeType::PLAIN;
+}
+
+std::array<BlockType, CHUNK_Y_SIZE> World::WorldGenerator::getBlockColumn(int baseHeight, BiomeType biome)
+{
+	std::array<BlockType, CHUNK_Y_SIZE> blocks;
+	// switch(biome)
+	// {
+	// case BiomeType::OCEAN:
+	// {
+	// 	for(int i = 0; i < CHUNK_Y_SIZE; i++)
+	// 	{
+	// 		if (i < baseHeight)
+	// 			blocks[i] = BlockType::Stone;
+	// 		else if (i < 80)
+	// 			blocks[i] = BlockType::Water;
+	// 		else
+	// 			blocks[i] = BlockType::Air;
+	// 	}
+	// 	break;
+	// }
+	// case BiomeType::RIVER:
+	// {
+	// 	for(int i = 0; i < CHUNK_Y_SIZE; i++)
+	// 	{
+	// 		if (i < baseHeight)
+	// 			blocks[i] = BlockType::Stone;
+	// 		else if (i < 80)
+	// 			blocks[i] = BlockType::Water;
+	// 		else
+	// 			blocks[i] = BlockType::Air;
+	// 	}
+	// 	break;
+	// }
+	// case BiomeType::MOUNTAIN:
+	// {
+	// 	for(int i = 0; i < CHUNK_Y_SIZE; i++)
+	// 	{
+	// 		if (i < baseHeight)
+	// 			blocks[i] = BlockType::Stone;
+	// 		else
+	// 			blocks[i] = BlockType::Air;
+	// 	}
+	// 	break;
+	// }
+	// case BiomeType::COAST:
+	// {
+	// 	for(int i = 0; i < CHUNK_Y_SIZE; i++)
+	// 	{
+	// 		if (i < baseHeight - 5)
+	// 			blocks[i] = BlockType::Stone;
+	// 		else if (i < baseHeight)
+	// 			blocks[i] = BlockType::Sand;
+	// 		else if (i < 80 - 5)
+	// 			blocks[i] = BlockType::Water;
+	// 		else
+	// 			blocks[i] = BlockType::Air;
+	// 	}
+	// 	break;
+	// }
+	// case BiomeType::DESERT:
+	// {
+	// 	for(int i = 0; i < CHUNK_Y_SIZE; i++)
+	// 	{
+	// 		if (i < baseHeight - 5)
+	// 			blocks[i] = BlockType::Stone;
+	// 		else if (i < baseHeight)
+	// 			blocks[i] = BlockType::Sand;
+	// 		else
+	// 			blocks[i] = BlockType::Air;
+	// 	}
+	// 	break;
+	// }
+	// case BiomeType::PLAIN:
+	// 	[[fallthrough]];
+	// case BiomeType::FOREST:
+	// {
+	// 	for(int i = 0; i < CHUNK_Y_SIZE; i++)
+	// 	{
+	// 		if (i < baseHeight - 5)
+	// 			blocks[i] = BlockType::Stone;
+	// 		else if (i < baseHeight - 1)
+	// 			blocks[i] = BlockType::Dirt;
+	// 		else if (i < baseHeight)
+	// 			blocks[i] = BlockType::Grass;
+	// 		else
+	// 			blocks[i] = BlockType::Air;
+	// 	}
+	// 	break;
+	// }
+	// case BiomeType::NONE:
+	// {
+	// 	for(int i = 0; i < CHUNK_Y_SIZE; i++)
+	// 		blocks[i] = BlockType::Air;
+	// 	break;
+	// }
+	// }
+	for(int i = 0; i < CHUNK_Y_SIZE; i++)
+	{
+		if (i < baseHeight)
+			blocks[i] = BlockType::Stone;
+		else if (i < 80)
+			blocks[i] = BlockType::Water;
+		else
+			blocks[i] = BlockType::Air;
+	}
+	return blocks;
+}
+
+void World::WorldGenerator::drawNoises(VulkanAPI & vk)
+{
+	for (int x = 0; x < DebugGui::NOISE_SIZE; x++)
+	{
+		for (int z = 0; z < DebugGui::NOISE_SIZE; z++)
+		{
+			glm::vec2 current_world_pos = glm::vec2(x,z) * 5.0f;
+			//generate values
+			float continentalness = m_continentalness_perlin.noise(current_world_pos);
+			float erosion = m_erosion_perlin.noise(current_world_pos);
+			float weirdness = m_weirdness_perlin.noise(current_world_pos);
+			float temperature = m_temperature_perlin.noise(current_world_pos);
+			float humidity = m_humidity_perlin.noise(current_world_pos);
+			float PV = calculatePeaksAndValleys(weirdness);
+			
+			int level_continent = continentalnessLevel(continentalness);
+			int level_erosion = erosionLevel(erosion);
+			int level_temperature = temperatureLevel(temperature);
+			int level_humidity = humidityLevel(humidity);
+			int level_weirdness = weirdnessLevel(weirdness);
+			int level_PV = PVLevel(PV);
+
+			BiomeType biome = getBiomeType(level_continent, level_erosion, level_humidity, level_temperature, level_weirdness, level_PV);
+
+			uint8_t rgb_continent = mapRange(continentalness, -1.0f, 1.0f, 0.0f, 255.0f);
+			uint8_t rgb_erosion = mapRange(erosion, -1.0f, 1.0f, 0.0f, 255.0f);
+			uint8_t rgb_temperature = mapRange(temperature, -1.0f, 1.0f, 0.0f, 255.0f);
+			uint8_t rgb_humidity = mapRange(humidity, -1.0f, 1.0f, 0.0f, 255.0f);
+			uint8_t rgb_weirdness = mapRange(weirdness, -1.0f, 1.0f, 0.0f, 255.0f);
+			uint8_t rgb_PV = mapRange(PV, -1.0f, 1.0f, 0.0f, 255.0f);
+
+			vk.ImGuiTexturePutPixel(DebugGui::continentalness_texture_id, x, z, rgb_continent, rgb_continent, rgb_continent);
+			vk.ImGuiTexturePutPixel(DebugGui::erosion_texture_id, x, z, rgb_erosion, rgb_erosion, rgb_erosion);
+			vk.ImGuiTexturePutPixel(DebugGui::temperature_texture_id, x, z, rgb_temperature, rgb_temperature, rgb_temperature);
+			vk.ImGuiTexturePutPixel(DebugGui::humidity_texture_id, x, z, rgb_humidity, rgb_humidity, rgb_humidity);
+			vk.ImGuiTexturePutPixel(DebugGui::weirdness_texture_id, x, z, rgb_weirdness, rgb_weirdness, rgb_weirdness);
+			vk.ImGuiTexturePutPixel(DebugGui::PV_texture_id, x, z, rgb_PV, rgb_PV, rgb_PV);
+
+			glm::ivec3 biome_rgb;
+
+			switch (biome)
+			{
+			case BiomeType::OCEAN:
+				biome_rgb = {0, 0, 200};
+				break;
+			case BiomeType::RIVER:
+				biome_rgb = {0, 255, 255};
+				break;
+			case BiomeType::MOUNTAIN:
+				biome_rgb = {200, 200, 200};
+				break;
+			case BiomeType::COAST:
+				biome_rgb = {255, 255, 0};
+				break;
+			case BiomeType::DESERT:
+				biome_rgb = {200, 200, 0};
+				break;
+			case BiomeType::FOREST:
+				biome_rgb = {0, 180, 0};
+				break;
+			case BiomeType::PLAIN:
+				biome_rgb = {0, 255, 0};
+				break;
+			case BiomeType::NONE:
+				biome_rgb = {0, 0, 0};
+				break;
+			};
+			vk.ImGuiTexturePutPixel(DebugGui::biome_texture_id, x, z, biome_rgb.r, biome_rgb.g, biome_rgb.b);
 		}
 	}
 }

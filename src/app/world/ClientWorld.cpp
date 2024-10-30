@@ -364,11 +364,12 @@ void ClientWorld::updateChunks(const glm::vec3 & playerPosition)
 	{
 		Chunk::biomeInfo biome = playerChunk->getBiome(getBlockChunkPos(playerPosition).x, getBlockChunkPos(playerPosition).z);
 
-		DebugGui::continentalness = biome.continentalness;
-		DebugGui::erosion = biome.erosion;
-		DebugGui::humidity = biome.humidity;
-		DebugGui::isLand = biome.isLand;
-		DebugGui::isOcean = biome.isOcean;
+		// DebugGui::continentalness = biome.continentalness;
+		// DebugGui::erosion = biome.erosion;
+		// DebugGui::humidity = biome.humidity;
+		// DebugGui::isLand = biome.isLand;
+		// DebugGui::isOcean = biome.isOcean;
+		DebugGui::biome = static_cast<uint8_t>(biome.biome);
 	}
 	// loadChunks(playerPosition);
 	// unloadChunks(playerPosition);
