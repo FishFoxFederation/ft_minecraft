@@ -767,11 +767,11 @@ float World::WorldGenerator::calculateBaseHeight(const float & relief, const flo
 	float temp_relief = relief;
 	float ret = 0.0f;
 	temp_relief = (temp_relief + 1) / 2; // map from [-1, 1] to [0, 1]
-	float oceanRelief = mapRange(temp_relief, 0.0f, 1.0f, 20.0f, 40.0f);
+	float oceanRelief = mapRange(temp_relief, 0.0f, 1.0f, 40.0f, 60.0f);
 	float riverRelief = mapRange(temp_relief, 0.0f, 1.0f, 70.0f, 80.0f);
-	float landRelief = mapRange(temp_relief, 0.0f, 1.0f, 80.0f, 100.0f);
 	temp_relief = pow(2, 10 * temp_relief - 10); // map from [0, 1] to [0, 1] with a slope
-	float mountainRelief = mapRange(temp_relief, 0.0f, 1.0f, 80.0f, 150.0f);
+	float landRelief = mapRange(temp_relief, 0.0f, 1.0f, 80.0f, 300.0f);
+	// float mountainRelief = mapRange(temp_relief, 0.0f, 1.0f, 100.0f, 150.0f);
 
 	//lerp between ocean and land with heavy favoring of ocean
 
@@ -782,10 +782,11 @@ float World::WorldGenerator::calculateBaseHeight(const float & relief, const flo
 		landRelief = landRelief;
 	else if (pv < 0.2f)
 		landRelief = landRelief;
-	else if (pv <= 0.7f)
-		landRelief = std::lerp(landRelief, mountainRelief, mapRange(pv, 0.2f, 0.7f, 0.0f, 1.0f));
+	// else if (pv <= 0.7f)
+		// landRelief = std::lerp(landRelief, mountainRelief, mapRange(pv, 0.2f, 0.7f, 0.0f, 1.0f));
 	else
-		landRelief = mountainRelief;
+		landRelief = landRelief;
+		// landRelief = mountainRelief;
 		// landRelief = std::lerp(landRelief, mountainRelief, mapRange(pv, 0.7f, 1.0f, 0.0f, 1.0f));
 	// else
 		// landRelief = std::lerp(landRelief, riverRelief, mapRange(pv, -0.8f, 0.2f, 0.0f, 1.0f));

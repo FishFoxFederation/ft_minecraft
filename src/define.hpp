@@ -18,6 +18,6 @@ constexpr static int TICKET_LEVEL_BORDER = 33;
 constexpr static int TICKET_LEVEL_INACTIVE = 34;
 
 constexpr static int SPAWN_TICKET_LEVEL = 30;
-constexpr static int PLAYER_TICKET_LEVEL = 30;
+constexpr static int PLAYER_TICKET_LEVEL = 25;
 
 constexpr static int SERVER_LOAD_DISTANCE = TICKET_LEVEL_INACTIVE - PLAYER_TICKET_LEVEL;
