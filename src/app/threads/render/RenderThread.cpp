@@ -1310,23 +1310,23 @@ void RenderThread::drawDebugGui()
 	{ // Scope for Tracy
 		TracyVkZone(vk.imgui_ctx, vk.imgui_command_buffers[vk.current_frame], "Draw debug gui");
 
-	{
-		std::lock_guard lock(vk.imgui_textures_mutex);
-		for (auto & [id, texture]: vk.imgui_textures)
 		{
-			vk.setImageLayout(
-				vk.imgui_command_buffers[vk.current_frame],
-				texture.image,
-				VK_IMAGE_LAYOUT_GENERAL,
-				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 },
-				0,
-				0,
-				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT
-			);
+			std::lock_guard lock(vk.imgui_textures_mutex);
+			for (auto & [id, texture]: vk.imgui_textures)
+			{
+				vk.setImageLayout(
+					vk.imgui_command_buffers[vk.current_frame],
+					texture.image,
+					VK_IMAGE_LAYOUT_GENERAL,
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 },
+					0,
+					0,
+					VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+					VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT
+				);
+			}
 		}
-	}
 		vk.setImageLayout(
 			vk.imgui_command_buffers[vk.current_frame],
 			vk.swapchain.images[vk.current_image_index],
@@ -1381,21 +1381,22 @@ void RenderThread::drawDebugGui()
 			VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT
 		);
 
-	{
-		std::lock_guard lock(vk.imgui_textures_mutex);
-		for (auto & [id, texture]: vk.imgui_textures)
 		{
-			vk.setImageLayout(
-				vk.imgui_command_buffers[vk.current_frame],
-				texture.image,
-				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				VK_IMAGE_LAYOUT_GENERAL,
-				{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 },
-				0,
-				0,
-				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT
-			);
+			std::lock_guard lock(vk.imgui_textures_mutex);
+			for (auto & [id, texture]: vk.imgui_textures)
+			{
+				vk.setImageLayout(
+					vk.imgui_command_buffers[vk.current_frame],
+					texture.image,
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					VK_IMAGE_LAYOUT_GENERAL,
+					{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 },
+					0,
+					0,
+					VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+					VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT
+				);
+			}
 		}
 	}
 
