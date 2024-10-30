@@ -364,9 +364,12 @@ void ClientWorld::updateChunks(const glm::vec3 & playerPosition)
 	{
 		Chunk::biomeInfo biome = playerChunk->getBiome(getBlockChunkPos(playerPosition).x, getBlockChunkPos(playerPosition).z);
 
-		// DebugGui::continentalness = biome.continentalness;
-		// DebugGui::erosion = biome.erosion;
-		// DebugGui::humidity = biome.humidity;
+		DebugGui::continentalness = biome.continentalness;
+		DebugGui::erosion = biome.erosion;
+		DebugGui::humidity = biome.humidity;
+		DebugGui::temperature = biome.temperature;
+		DebugGui::weirdness = biome.weirdness;
+		DebugGui::PV = biome.PV;
 		// DebugGui::isLand = biome.isLand;
 		// DebugGui::isOcean = biome.isOcean;
 		DebugGui::biome = static_cast<uint8_t>(biome.biome);
@@ -667,7 +670,7 @@ std::pair<glm::dvec3, glm::dvec3> ClientWorld::calculatePlayerMovement(
 	}
 	else // if player is flying
 	{
-		double acc = 400.0;
+		double acc = 2000.0;
 		double drag = 10.0;
 
 		move.y = up - down;

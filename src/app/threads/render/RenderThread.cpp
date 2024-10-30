@@ -182,10 +182,13 @@ void RenderThread::loop()
 			DebugGui::player_position.get().x, DebugGui::player_position.get().y, DebugGui::player_position.get().z
 		);
 		debug_text += ft_format(
-			"C: %.2f; E: %.2f; H: %.2f\n",
+			"C: %.2f; E: %.2f; H: %.2f; T: %.2f; PV %.2f; W %.2f\n ",
 			DebugGui::continentalness.load(),
 			DebugGui::erosion.load(),
-			DebugGui::humidity.load()
+			DebugGui::humidity.load(),
+			DebugGui::temperature.load(),
+			DebugGui::PV.load(),
+			DebugGui::weirdness.load()
 		);
 
 		switch(DebugGui::biome.load())
@@ -1056,13 +1059,14 @@ void RenderThread::lightingPass()
 
 		if (m_world_scene.show_debug_text) // Debug info
 		{
-			float size = 512.0f;
+			float width = 2048.0f;
+			float height = 512.0f;
 
 			VkViewport viewport = {};
 			viewport.x = 0;
 			viewport.y = 0;
-			viewport.width = size;
-			viewport.height = size;
+			viewport.width = vk.debug_info_image.extent2D.width;
+			viewport.height = vk.debug_info_image.extent2D.height;
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 

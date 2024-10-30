@@ -594,6 +594,12 @@ void World::WorldGenerator::newReliefPass(const glm::ivec3 & chunkPos3D)
 			chunk->setBlockColumn(blockX, blockZ, blocks);
 			Chunk::biomeInfo biome_info;
 			biome_info.biome = biome;
+			biome_info.continentalness = continentalness;
+			biome_info.erosion = erosion;
+			biome_info.weirdness = weirdness;
+			biome_info.temperature = temperature;
+			biome_info.humidity = humidity;
+			biome_info.PV = PV;
 			chunk->setBiome(blockX, blockZ, biome_info);
 			// Chunk::biomeInfo biome_info{
 			// 	false,
