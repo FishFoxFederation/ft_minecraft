@@ -572,6 +572,9 @@ void World::WorldGenerator::newReliefPass(const glm::ivec3 & chunkPos3D)
 			float temperature = m_temperature_perlin.noise(current_world_pos);
 			float humidity = m_humidity_perlin.noise(current_world_pos);
 			float PV = calculatePeaksAndValleys(weirdness);
+			float relief = generateReliefValue(glm::ivec2(current_world_pos));
+			// relief = (relief + 1) / 2; // map from [-1, 1] to [0, 1]
+			// relief = pow(2, 10 * relief - 10); // map from [0, 1] to [0, 1] with a slope
 			
 			int level_continent = continentalnessLevel(continentalness);
 			int level_erosion = erosionLevel(erosion);
@@ -588,7 +591,7 @@ void World::WorldGenerator::newReliefPass(const glm::ivec3 & chunkPos3D)
 			// negative PV means negative height bias
 			//and erosion as well as PV to determine the height bias
 			float heightBias = calculateHeightBias(erosion, PV);
-			int baseHeight = calculateBaseHeight(continentalness, PV, erosion, biome);
+			int baseHeight = calculateBaseHeight(relief, continentalness, PV, erosion, biome);
 
 			std::array<BlockType, CHUNK_Y_SIZE> blocks = getBlockColumn(baseHeight, biome);
 			chunk->setBlockColumn(blockX, blockZ, blocks);
@@ -759,11 +762,43 @@ float World::WorldGenerator::calculateHeightBias(const float & erosion, const fl
 	return ret;
 }
 
-float World::WorldGenerator::calculateBaseHeight(const float & continentalness, const float & pv, const float & erosion, BiomeType biome) 
+float World::WorldGenerator::calculateBaseHeight(const float & relief, const float & continentalness, const float & pv, const float & erosion, BiomeType biome) 
 {
-	float ret = continentalness;
-	
-	return mapRange(ret, 0.0f, 1.0f, 50.0f, 200.0f);
+	float temp_relief = relief;
+	float ret = 0.0f;
+	temp_relief = (temp_relief + 1) / 2; // map from [-1, 1] to [0, 1]
+	float oceanRelief = mapRange(temp_relief, 0.0f, 1.0f, 20.0f, 40.0f);
+	float riverRelief = mapRange(temp_relief, 0.0f, 1.0f, 70.0f, 80.0f);
+	float landRelief = mapRange(temp_relief, 0.0f, 1.0f, 80.0f, 100.0f);
+	temp_relief = pow(2, 10 * temp_relief - 10); // map from [0, 1] to [0, 1] with a slope
+	float mountainRelief = mapRange(temp_relief, 0.0f, 1.0f, 80.0f, 150.0f);
+
+	//lerp between ocean and land with heavy favoring of ocean
+
+	//create smooth transition between mountains and land and rivers
+	if (pv < -0.8f)
+		landRelief = std::lerp(riverRelief, landRelief, mapRange(pv, -1.0f, -0.8f, 0.0f, 1.0f));
+	else if (pv < -0.6f)
+		landRelief = landRelief;
+	else if (pv < 0.2f)
+		landRelief = landRelief;
+	else if (pv <= 0.7f)
+		landRelief = std::lerp(landRelief, mountainRelief, mapRange(pv, 0.2f, 0.7f, 0.0f, 1.0f));
+	else
+		landRelief = mountainRelief;
+		// landRelief = std::lerp(landRelief, mountainRelief, mapRange(pv, 0.7f, 1.0f, 0.0f, 1.0f));
+	// else
+		// landRelief = std::lerp(landRelief, riverRelief, mapRange(pv, -0.8f, 0.2f, 0.0f, 1.0f));
+
+	//lerp ocean and land
+	if( continentalness > -0.1f)
+		ret = landRelief;
+	else if (continentalness < -0.2f)
+		ret = oceanRelief;
+	else
+		ret = std::lerp(oceanRelief, landRelief, mapRange(continentalness, -0.2f, -0.1f, 0.0f, 1.0f));
+
+	return ret;
 }
 
 int World::WorldGenerator::temperatureLevel(const float & temperature)
@@ -804,7 +839,7 @@ int World::WorldGenerator::erosionLevel(const float & erosion)
 int World::WorldGenerator::continentalnessLevel(const float & continentalness)
 {
 	if (continentalness < -0.2f) return 0;
-	if (continentalness < 0.0f) return 1;
+	if (continentalness < -0.1f) return 1;
 	return 2;
 }
 

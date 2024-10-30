@@ -146,7 +146,9 @@ public:
 		\*********************/
 		float	calculatePeaksAndValleys(const float & weirdness);
 		float	calculateHeightBias(const float & erosion, const float & PV);
-		float	calculateBaseHeight(const float & continentalness,
+		float	calculateBaseHeight(
+			const float & relief,
+			const float & continentalness,
 			const float & pv,
 			const float & erosion,
 			BiomeType biome);
