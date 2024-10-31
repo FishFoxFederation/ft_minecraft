@@ -10,7 +10,7 @@
 World::WorldGenerator::WorldGenerator(World & world)
 : m_relief_perlin(1, 7, 1, 0.35, 2),
   m_cave_perlin(1, 4, 1, 0.5, 2),
-  m_continentalness_perlin(10, 4, 0.003, 0.4, 2),
+  m_continentalness_perlin(10, 6, 0.001, 0.5, 2),
   m_erosion_perlin(5, 2, 0.005, 0.5, 2),
   m_weirdness_perlin(42, 2, 0.004, 0.5, 1.5),
   m_temperature_perlin(7, 1, 0.005, 0.5, 2),
@@ -769,10 +769,12 @@ float World::WorldGenerator::calculateBaseHeight(const float & relief, const flo
 	temp_relief = (temp_relief + 1) / 2; // map from [-1, 1] to [0, 1]
 	float oceanRelief = mapRange(temp_relief, 0.0f, 1.0f, 40.0f, 60.0f);
 	float riverRelief = mapRange(temp_relief, 0.0f, 1.0f, 70.0f, 80.0f);
-	temp_relief = pow(2, 10 * temp_relief - 10); // map from [0, 1] to [0, 1] with a slope
-	float landRelief = mapRange(temp_relief, 0.0f, 1.0f, 80.0f, 300.0f);
-	// float mountainRelief = mapRange(temp_relief, 0.0f, 1.0f, 100.0f, 150.0f);
+	
+	float flatLandRelief = mapRange(temp_relief, 0.0f, 1.0f, 80.0f, 100.0f);
+	temp_relief = pow(2, 7 * temp_relief - 7); // map from [0, 1] to [0, 1] with a slope
+	float mountainRelief = mapRange(temp_relief, 0.0f, 1.0f, 80.0f, 300.0f);
 
+	float landRelief = std::lerp(flatLandRelief, mountainRelief, mapRange(pv, -1.0f, 1.0f, 0.0f, 1.0f));
 	//lerp between ocean and land with heavy favoring of ocean
 
 	//create smooth transition between mountains and land and rivers
