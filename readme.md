@@ -1,6 +1,6 @@
 # FishFoxFederation's VOX
 
-## [Documentation](https://fishfoxfederation.github.io/ft_vox/)
+## [Documentation](https://fishfoxfederation.github.io/ft_minecraft/)
 
 ## Quickstart
 
